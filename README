@@ -1,0 +1,69 @@
+PrologAlmostHaskell Intepreter
+Autor: Michał Zapotoczny
+Program realizuje całą specyfikację 2 pracownii z Programowania (L).
+PAH składa się z 4 modułów: shell, parser, intepreter, unit testy.
+
+Uruchomienie:
+	Shell:
+		[shell]. start.
+	Unit testy:
+		[unitTests]. start.
+
+Sposób działania:
+Shell, Unit testy: prosty, pominę.
+Parser: 
+	 Korzystam z DCG, najpierw używam leksera następnie parsera którego
+	 wynikiem będzie kod który potem można wykorzystać w intepreterze.
+
+Intepreter:
+	 Częścią intepretera jest generator środowiska funkcji, który bierze
+	 listę funkcji z parsera a następnie: grupuje funkcję w krotki:
+	 (Nazwa funkcji, [Możliwe wywołania]), jeśli funkcja posiada deklaracje
+	 lokalne, wtedy następuje ich konwersja do globalnych z zamianą nazw na
+	 takie typu: parentN@child który uwzględnia z którego rodzica dana funkcja
+	 pochodzi a także to, z którego dopasowania tej funkcji.
+	 Złą praktyką w PAH jest odwoływanie się do zmiennych ojca przez funkcję dziecka,
+	 dlatego taka praktyka jest niewskazana.
+
+	 Po sparsowaniu komendy do wykonania, wykonywany jest predykat który wywołuje
+	 ewaluację, dopóki nie zostanie zwrócony wynik lub błąd.
+	 Leniwość:
+		 Funkcja runCode zawsze wykonuje tylko jedno, obliczenie realizowane jest to
+		 poprzez ostatni parametr wywołania, który mówi, czy dana funkcja została już
+		 policzona do końca, jeśli tak to runCode może przejść do innych obliczeń,
+		 w p/p wykonuje to obliczenie. Prawie każde wywołanie runCode zwraca wartość
+		 false tego pola, jednak jeśli jest to obliczenie atomowe (np. liczba) wtedy
+		 wynik tego wykonania zostaje oznaczony specjalnym funktorem result który gwarantuje
+		 że przy następnym wowołaniu zostanie to uzane jako obliczone.
+	 Pattern matching:
+		 PM polega na unifikacji argumentów z parametrami wywołania i zwrócenie listy podstawień.
+		 Unifikacja wygląda następująco:
+			 | Parametr     | Pattern   |
+			 ----------------------------
+			 | Cokolwiek    | Zmienna   |
+			 |              |           |
+			 | Gorliwie     | Liczba    |
+			 | obliczona    | Bool      |
+			 | wartość      |           |
+			 |              |           |
+			 | Leniwie      | Konstr.   |
+			 | obliczona    |           |
+			 | wartość      |           |
+
+	 β-redukcja:
+		 Znajdujemy w kodzie zmienną i podstawiamy, z pewnymi wyjątkami (np. wyrażenia lambda gdy zmienna pod którą
+		podstawiamy to ta sama która jest użyta w lambdzie)
+	
+	Częściowa aplikacja:
+		Po pattern-matchingu nadmiarowe argumenty dodajemy do ciała funkcji na końcu.
+	
+
+	Wyrażenia lambda:
+		Jeśli mamy wykonać wyrażenie lambda, wtedy bierzemy pierwszy argument który jest po wyrażeniu lambda, i
+		robimy beta redukcję zmienna lambdy -> argument w ciele wyrażenia lambda. Lambda zostanie zapamiętana jako
+		wyrażenie lambda dopóki jej ciało nie obliczy się do końca, po tym w to miejsce jest podstawiana uzyskana wartość.
+
+	 Uruchamianie kodu:
+		 Najpierw zostanie wyszukany w środowisku zbiór funkcji który odpowiada nazwie wywoływanej funkcji
+		 Zostanie przeprowadzony pattern matching który zwróci listę podstawień po czym na podstawie tej
+		 listy następuje β-redukcja, po czym kod zostaje leniwie wykonany.

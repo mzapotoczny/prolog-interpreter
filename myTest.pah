@@ -1,0 +1,11 @@
+dodaj x y = x+y
+
+runAck 0 n = ack 0 n where {
+		ack 0 n = 20;
+	}	
+
+runAck n m = ack n m where {
+		ack 0 n = n+1;
+		ack m 0 = ack (m-1) 1;
+		ack m n = ack (m-1) (ack m (n-1));
+	}	
